@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        'NodeJS 23'
+        nodejs 'NodeJS 23'
     }
     
     stages {
@@ -41,14 +41,14 @@ pipeline {
             steps {
                 sh 'node --version'
                 sh 'npm --version'
-                sh 'npm install'
-                sh 'npm run build'
+                //sh 'npm install'
+                sh './script/build.sh'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'npm test'
+                sh './script/test.sh'
             }
         }
 
