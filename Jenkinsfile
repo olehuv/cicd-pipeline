@@ -42,13 +42,13 @@ pipeline {
                 sh 'node --version'
                 sh 'npm --version'
                 //sh 'npm install'
-                sh './script/build.sh'
+                sh './scripts/build.sh'
             }
         }
 
         stage('Test') {
             steps {
-                sh './script/test.sh'
+                sh './scripts/test.sh'
             }
         }
 
