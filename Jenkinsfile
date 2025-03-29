@@ -35,14 +35,16 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'npm install' // Або ваша команда для збірки
-                sh 'npm run build' // Або ваша команда для збірки
+                sh 'node --version'
+                sh 'npm --version'
+                sh 'npm install'
+                sh 'npm run build'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'npm test' // Або ваша команда для тестування
+                sh 'npm test'
             }
         }
 
@@ -58,7 +60,7 @@ pipeline {
             steps {
                 input message: "Approve deployment of ${env.IMAGE_TAG} from branch ${BRANCH_NAME}"
                 script {
-                    docker.withRegistry('', '') { // Замініть на свій Docker Registry, якщо потрібно
+                    docker.withRegistry('', '') { //Docker Registry
                         dockerImage.push()
                     }
                     // Додайте сюди команди для розгортання вашого Docker контейнера
