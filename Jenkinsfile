@@ -1,42 +1,71 @@
 pipeline {
     agent any
-    environment {
-        BRANCH_NAME = "${env.BRANCH_NAME}"
-        APP_PORT = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
-        IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain:v1.0' : 'nodedev:v1.0'
-    }
-    parameters {
-        string(name: 'DEPLOY_BRANCH', defaultValue: 'main', description: 'Branch to deploy')
-    }
+
     stages {
-        stage('Manual Approval') {
-            steps {
-                input message: "Deploy ${params.DEPLOY_BRANCH}?", ok: 'Deploy'
-            }
-        }
         stage('Checkout') {
             steps {
-                git branch: "${params.DEPLOY_BRANCH}", url: 'git@your-repo.git'
+                checkout scm
             }
         }
+
+        stage('Set Environment Variables') {
+            steps {
+                script {
+                    if (BRANCH_NAME == 'main') {
+                        env.PORT = '3000'
+                        env.IMAGE_TAG = 'nodemain:v1.0'
+                        env.LOGO_FILE = 'logo_main.svg'
+                    } else if (BRANCH_NAME == 'dev') {
+                        env.PORT = '3001'
+                        env.IMAGE_TAG = 'nodedev:v1.0'
+                        env.LOGO_FILE = 'logo_dev.svg'
+                    } else {
+                        error "Unsupported branch: ${BRANCH_NAME}"
+                    }
+                    println "Building for branch: ${BRANCH_NAME} with port: ${env.PORT} and image tag: ${env.IMAGE_TAG}"
+                }
+            }
+        }
+
+        stage('Copy Logo') {
+            steps {
+                sh "cp ${env.LOGO_FILE} logo.svg"
+            }
+        }
+
         stage('Build') {
             steps {
-                sh 'npm install'
+                sh 'npm install' // Або ваша команда для збірки
+                sh 'npm run build' // Або ваша команда для збірки
             }
         }
+
         stage('Test') {
             steps {
-                sh 'npm test'
+                sh 'npm test' // Або ваша команда для тестування
             }
         }
+
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${IMAGE_NAME} ."
+                script {
+                    dockerImage = docker.build(env.IMAGE_TAG)
+                }
             }
         }
+
         stage('Deploy') {
             steps {
-                sh "docker run -d -p ${APP_PORT}:3000 ${IMAGE_NAME}"
+                input message: "Approve deployment of ${env.IMAGE_TAG} from branch ${BRANCH_NAME}"
+                script {
+                    docker.withRegistry('', '') { // Замініть на свій Docker Registry, якщо потрібно
+                        dockerImage.push()
+                    }
+                    // Додайте сюди команди для розгортання вашого Docker контейнера
+                    // Наприклад:
+                    // sh "docker run -d -p ${env.PORT}:${env.PORT} --name myapp ${env.IMAGE_TAG}"
+                    println "Deployment of ${env.IMAGE_TAG} from branch ${BRANCH_NAME} initiated on port ${env.PORT}"
+                }
             }
         }
     }
