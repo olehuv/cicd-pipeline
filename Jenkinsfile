@@ -37,16 +37,16 @@ pipeline {
             }
         }
 
-        stage('Prepare Scripts') {
-            steps {
-                sh 'chmod +x scripts/build.sh'
-                sh 'chmod +x scripts/test.sh'
-            }
-        }
+        //stage('Prepare Scripts') {
+        //    steps {
+        //        sh 'chmod +x scripts/build.sh'
+        //        sh 'chmod +x scripts/test.sh'
+        //    }
+        //}
         
         stage('Build') {
             steps {
-                //sh 'npm install'
+                sh 'chmod +x script/build.sh'
                 sh './scripts/build.sh'
             }
         }
