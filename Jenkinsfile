@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS 23'
+        nodejs 'NodeJS 18.20.8'
     }
     
     stages {
@@ -33,7 +33,7 @@ pipeline {
 
         stage('Copy Logo') {
             steps {
-                sh "cp ${env.LOGO_FILE} logo.svg"
+                sh "cp ${env.LOGO_FILE} src/logo.svg"
             }
         }
 
