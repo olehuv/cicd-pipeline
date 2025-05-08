@@ -17,11 +17,11 @@ pipeline {
                 script {
                     if (BRANCH_NAME == 'main') {
                         env.PORT = '3000'
-                        env.IMAGE_TAG = 'nodemain:v1.0'
+                        env.IMAGE_TAG = 'olehuv/nodemain:v1.0'
                         env.LOGO_FILE = 'logo_main.svg'
                     } else if (BRANCH_NAME == 'dev') {
                         env.PORT = '3001'
-                        env.IMAGE_TAG = 'nodedev:v1.0'
+                        env.IMAGE_TAG = 'olehuv/nodedev:v1.0'
                         env.LOGO_FILE = 'logo_dev.svg'
                     } else {
                         error "Unsupported branch: ${BRANCH_NAME}"
@@ -59,9 +59,12 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build(env.IMAGE_TAG)
+            withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                docker.withRegistry('', '') {
+                    dockerImage.push()
                 }
+                sh "docker run -d --expose ${env.PORT} -p ${env.PORT}:${env.PORT} --name myapp ${env.IMAGE_TAG}"
+                println "Deployment of ${env.IMAGE_TAG} from branch ${BRANCH_NAME} initiated on port ${env.PORT}"
             }
         }
 
