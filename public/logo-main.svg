@@ -1,0 +1,6 @@
+<svg width="200" height="60" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="60" fill="#e9ecef" />
+  <text x="10" y="40" font-family="Arial" font-size="36" fill="#28a745">MAIN</text>
+  <circle cx="170" cy="30" r="15" fill="#28a745" />
+  <path d="M165 25 L170 35 L175 25 Z" fill="white" />
+</svg>
