@@ -1,14 +1,12 @@
-# Використовуємо Node.js образ
-FROM node:7.8.0
+FROM node:18-alpine
 
-# Робоча директорія
-WORKDIR /opt
+WORKDIR /opt/app
+
+COPY package*.json ./
+RUN npm install
 
 COPY . .
 
-ARG PORT=3000
-ENV PORT=${PORT}
+EXPOSE 3000
 
-RUN npm install
-
-CMD ["sh", "-c", "npm run start -- --port $PORT"]
+CMD ["npm", "start"]
