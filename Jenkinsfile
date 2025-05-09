@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+            nodejs 'node18.20.8'
+        }
+
     environment {
         NODE_ENV = 'production'
     }
@@ -24,10 +28,6 @@ pipeline {
             steps {
                 checkout scm
             }
-        }
-
-        tools {
-            nodejs 'node18'
         }
 
         stage('Build') {
