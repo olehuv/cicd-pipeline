@@ -1,22 +1,17 @@
 pipeline {
     agent any
     environment {
-        BRANCH_NAME = "${env.BRANCH_NAME}"
-        APP_PORT = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
         IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain:v1.0' : 'nodedev:v1.0'
+        HOST_PORT  = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
+        CONTAINER_PORT = '3000'
     }
-    parameters {
-        string(name: 'DEPLOY_BRANCH', defaultValue: 'main', description: 'Branch to deploy')
+    tools {
+        nodejs 'NodeJS_18.20.8'
     }
     stages {
-        stage('Manual Approval') {
-            steps {
-                input message: "Deploy ${params.DEPLOY_BRANCH}?", ok: 'Deploy'
-            }
-        }
         stage('Checkout') {
             steps {
-                git branch: "${params.DEPLOY_BRANCH}", url: 'git@your-repo.git'
+                checkout scm
             }
         }
         stage('Build') {
@@ -34,9 +29,19 @@ pipeline {
                 sh "docker build -t ${IMAGE_NAME} ."
             }
         }
+        stage('Cleanup Previous Containers') {
+            steps {
+                script {
+                    def containerId = sh(script: "docker ps -q --filter ancestor=${IMAGE_NAME}", returnStdout: true).trim()
+                    if (containerId) {
+                        sh "docker stop ${containerId} && docker rm ${containerId}"
+                    }
+                }
+            }
+        }
         stage('Deploy') {
             steps {
-                sh "docker run -d -p ${APP_PORT}:3000 ${IMAGE_NAME}"
+                sh "docker run -d --expose ${HOST_PORT} -p ${HOST_PORT}:${CONTAINER_PORT} ${IMAGE_NAME}"
             }
         }
     }

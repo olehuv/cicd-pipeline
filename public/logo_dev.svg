@@ -1,0 +1,6 @@
+<svg width="200" height="80" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="80" fill="#f0f0f0" />
+  <text x="10" y="50" font-family="Arial" font-size="48" fill="#007bff">DEV</text>
+  <path d="M150 20 L180 50 L150 50 L180 20 Z" fill="#ffc107" />
+  <text x="155" y="15" font-family="Arial" font-size="12" fill="#333">Alpha</text>
+</svg>
