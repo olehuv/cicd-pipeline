@@ -1,47 +1,63 @@
 pipeline {
     agent any
+
     environment {
-        IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain:v1.0' : 'nodedev:v1.0'
-        HOST_PORT  = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
-        CONTAINER_PORT = '3000'
+        NODE_ENV = 'production'
     }
-    tools {
-        nodejs 'NodeJS_18.20.8'
-    }
+
     stages {
+        stage('Prepare Environment Variables') {
+            steps {
+                script {
+                    if (env.BRANCH_NAME == 'main') {
+                        env.HOST_PORT = '3000'
+                        env.IMAGE_NAME = 'nodemain:v1.0'
+                    } else {
+                        env.HOST_PORT = '3001'
+                        env.IMAGE_NAME = 'nodedev:v1.0'
+                    }
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
+
+        tools {
+            nodejs 'node18'
+        }
+
         stage('Build') {
             steps {
                 sh 'npm install'
             }
         }
+
         stage('Test') {
             steps {
                 sh 'npm test'
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t ${IMAGE_NAME} ."
             }
         }
-        stage('Cleanup Previous Containers') {
-            steps {
-                script {
-                    def containerId = sh(script: "docker ps -q --filter ancestor=${IMAGE_NAME}", returnStdout: true).trim()
-                    if (containerId) {
-                        sh "docker stop ${containerId} && docker rm ${containerId}"
-                    }
-                }
-            }
-        }
+
         stage('Deploy') {
             steps {
-                sh "docker run -d --expose ${HOST_PORT} -p ${HOST_PORT}:${CONTAINER_PORT} ${IMAGE_NAME}"
+                script {
+                    // Зупинка контейнера з таким образом (якщо існує)
+                    sh "docker ps -q --filter ancestor=${IMAGE_NAME} | xargs -r docker stop"
+                    sh "docker ps -a -q --filter ancestor=${IMAGE_NAME} | xargs -r docker rm"
+
+                    // Запуск нового контейнера
+                    sh "docker run -d --expose 3000 -p ${HOST_PORT}:3000 ${IMAGE_NAME}"
+                }
             }
         }
     }
