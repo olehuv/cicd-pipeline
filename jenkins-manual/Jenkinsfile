@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+    tools {
+            nodejs 'node18.20.8'
+        }
+    parameters {
+        string(name: 'DEPLOY_BRANCH', defaultValue: 'main', description: 'Branch to deploy')
+    }
+    environment {
+        IMAGE_NAME = (params.DEPLOY_BRANCH == 'main') ? 'nodemain:v1.0' : 'nodedev:v1.0'
+        APP_PORT = (params.DEPLOY_BRANCH == 'main') ? '3000' : '3001'
+    }
+    stages {
+        stage('Manual Approval') {
+            steps {
+                input message: "Deploy ${params.DEPLOY_BRANCH}?", ok: 'Deploy'
+            }
+        }
+        stage('Checkout') {
+            steps {
+                git branch: "${params.DEPLOY_BRANCH}", url: 'git@your-repo.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${IMAGE_NAME} ."
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh "docker run -d -p ${APP_PORT}:3000 ${IMAGE_NAME}"
+            }
+        }
+    }
+}
