@@ -25,17 +25,6 @@ pipeline {
             }
         }
 
-        stage('Cleanup Previous Containers') {
-            steps {
-                script {
-                    def containerId = sh(script: "docker ps -q --filter ancestor=${IMAGE_NAME}", returnStdout: true).trim()
-                    if (containerId) {
-                    sh "docker stop ${containerId} && docker rm ${containerId}"
-                    }
-                }
-            }
-        }
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -57,6 +46,17 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t ${IMAGE_NAME} ."
+            }
+        }
+
+        stage('Cleanup Previous Containers') {
+            steps {
+                script {
+                    def containerId = sh(script: "docker ps -q --filter ancestor=${IMAGE_NAME}", returnStdout: true).trim()
+                    if (containerId) {
+                    sh "docker stop ${containerId} && docker rm ${containerId}"
+                    }
+                }
             }
         }
 
