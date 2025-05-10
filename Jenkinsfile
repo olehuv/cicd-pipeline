@@ -43,12 +43,6 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                sh "docker build -t ${IMAGE_NAME} ."
-            }
-        }
-
         stage('Cleanup Previous Containers') {
             steps {
                 script {
@@ -57,6 +51,12 @@ pipeline {
                     sh "docker stop ${containerId} && docker rm ${containerId}"
                     }
                 }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${IMAGE_NAME} ."
             }
         }
 
