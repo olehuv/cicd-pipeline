@@ -10,6 +10,7 @@ pipeline {
     }
 
     stages {
+
         stage('Prepare Environment Variables') {
             steps {
                 script {
@@ -19,6 +20,17 @@ pipeline {
                     } else {
                         env.HOST_PORT = '3001'
                         env.IMAGE_NAME = 'nodedev:v1.0'
+                    }
+                }
+            }
+        }
+
+        stage('Cleanup Previous Containers') {
+            steps {
+                script {
+                    def containerId = sh(script: "docker ps -q --filter ancestor=${IMAGE_NAME}", returnStdout: true).trim()
+                    if (containerId) {
+                    sh "docker stop ${containerId} && docker rm ${containerId}"
                     }
                 }
             }
