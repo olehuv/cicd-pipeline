@@ -8,6 +8,16 @@ pipeline {
     environment {
         NODE_ENV = 'production'
     }
+    
+    stage('Cleanup Previous Containers') {
+    steps {
+        script {
+            def containerId = sh(script: "docker ps -q --filter ancestor=${IMAGE_NAME}", returnStdout: true).trim()
+            if (containerId) {
+                sh "docker stop ${containerId} && docker rm ${containerId}"
+            }
+        }
+    }
 
     stages {
         stage('Prepare Environment Variables') {
