@@ -1,0 +1,63 @@
+pipeline {
+    agent any
+    tools {
+            nodejs 'node18.20.8'
+        }
+    parameters {
+        choice(name: 'ENV_CHOICE', choices: ['main', 'dev'], description: 'Choose the environment to deploy to')
+        string(name: 'IMAGE_TAG', defaultValue: 'v1.0', description: 'Enter the Docker image tag to deploy')
+    }
+    environment {
+        PORT = "${params.ENV_CHOICE == 'main' ? '3000' : '3001'}"
+        IMAGE_NAME = "${params.ENV_CHOICE == 'main' ? 'nodemain' : 'nodedev'}"
+        CONTAINER_NAME = "${params.ENV_CHOICE == 'main' ? 'container_main' : 'container_dev'}"
+    }
+    stages {
+        stage('Manual Approval') {
+            steps {
+                input message: "Deploy ${params.DEPLOY_BRANCH}?", ok: 'Deploy'
+            }
+        }
+        stage('Checkout') {
+            steps {
+                git branch: "${params.DEPLOY_BRANCH}", url: 'git@your-repo.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${IMAGE_NAME} ."
+            }
+        }
+        stage('Stop and Remove Existing Container') {
+            steps {
+                script {
+                    sh """
+                    echo "Stopping existing container if running..."
+                    docker stop $CONTAINER_NAME || true
+                    docker rm $CONTAINER_NAME || true
+                    """
+                }
+            }
+        }
+        stage('Deploy Docker Container') {
+            steps {
+                script {
+                    sh """
+                    echo "Deploying $IMAGE_NAME:$IMAGE_TAG on port $PORT..."
+                    docker run -d --name $CONTAINER_NAME --expose $PORT -p $PORT:3000 $IMAGE_NAME:$IMAGE_TAG
+                    """
+                }
+            }
+        }
+    }
+}
